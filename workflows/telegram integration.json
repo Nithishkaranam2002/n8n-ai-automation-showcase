@@ -1,0 +1,268 @@
+{
+  "name": "telegram integration",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -340,
+        -160
+      ],
+      "id": "f0216bcc-1c40-4391-9fef-879f29958721",
+      "name": "Telegram Trigger",
+      "webhookId": "b7cc08c4-45eb-455b-a9c0-b83aaa79cf89",
+      "credentials": {
+        "telegramApi": {
+          "id": "QFSy0GgUrD81LXbJ",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "=You are a helpful assistant\n\n# you have tools:\n\n## search_agent\nuse this tool to search web,wikipedia and hackernews "
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -120,
+        -160
+      ],
+      "id": "147f781f-eddb-49c5-b8c8-355ce5c56f43",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -160,
+        60
+      ],
+      "id": "bf440ef7-d5c6-4e75-a614-716975908de9",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "OZvUXFtSjspVMmz2",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        -160
+      ],
+      "id": "b78999a7-3d10-416e-be67-b98bb7ddd72d",
+      "name": "Send a text message",
+      "webhookId": "b7b61d67-4f53-484c-ae77-f1fff5911b20",
+      "credentials": {
+        "telegramApi": {
+          "id": "QFSy0GgUrD81LXbJ",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -20,
+        60
+      ],
+      "id": "24bfa009-5942-4bb6-884f-ca4b49f3ae6f",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolWikipedia",
+      "typeVersion": 1,
+      "position": [
+        120,
+        60
+      ],
+      "id": "90ae0f33-c5df-4500-bcfa-835360f5b143",
+      "name": "Wikipedia"
+    },
+    {
+      "parameters": {
+        "description": "use this tool to search web, wikipedia, hackernews and up-to-date info.",
+        "workflowId": {
+          "__rl": true,
+          "value": "3zp8tfwjWVrBBQTN",
+          "mode": "list",
+          "cachedResultName": "telegram sub workflow"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        60
+      ],
+      "id": "4d32295a-1a0e-4316-89c7-32a7d1599047",
+      "name": "search_agent"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        400,
+        60
+      ],
+      "id": "e5522d03-6601-443c-b31a-52461888ee5f",
+      "name": "Send a message in Gmail",
+      "webhookId": "aa6233af-1e6d-4399-92ca-92334a4a0260",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "pT7gMFjwpFzJJweD",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wikipedia": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "search_agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        []
+      ]
+    },
+    "Send a message in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "8d828f18-b6d9-4df5-b60a-f0a04c786027",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "df150c2c1ee870c0498df465041284cf0f42e43d3c2ec80707e235547d8ac814"
+  },
+  "id": "t5chdRAezrzJYtzV",
+  "tags": []
+}
